@@ -1,0 +1,6 @@
+{
+  "name": "github-ship",
+  "description": "Automated post-coding workflow: pre-flight checks, gitignore audit, tests, versioning, changelog, commit, push, and GitHub release",
+  "version": "1.0.0",
+  "contextFileName": "GEMINI.md"
+}

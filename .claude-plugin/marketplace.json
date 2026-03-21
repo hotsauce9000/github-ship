@@ -1,0 +1,16 @@
+{
+  "name": "github-ship-marketplace",
+  "description": "Marketplace for github-ship plugin",
+  "owner": {
+    "name": "hotsauce9000",
+    "url": "https://github.com/hotsauce9000"
+  },
+  "plugins": [
+    {
+      "name": "github-ship",
+      "description": "Automated post-coding workflow: pre-flight checks, gitignore audit, tests, versioning, changelog, commit, push, and GitHub release",
+      "version": "1.0.0",
+      "source": "./"
+    }
+  ]
+}
