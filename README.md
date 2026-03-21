@@ -135,6 +135,12 @@ For enhanced bug scanning, install [Ultimate Bug Scanner](https://github.com/Dic
 - **Push fails with auth error:** Run `gh auth login` or check your SSH keys.
 - **No test runner detected:** This is expected for docs-only or unsupported-language projects. github-ship warns and continues.
 
+## Acknowledgments
+
+This project was inspired by the "Full GitHub Flow" prompt in [Agent Flywheel](https://agent-flywheel.com/workflow) by [Jeffrey Emanuel](https://x.com/doodlestein) ([@Dicklesworthstone](https://github.com/Dicklesworthstone)). Check out his work on agentic workflows — it's excellent.
+
+Built by [Anthony Buitran](https://x.com/anthonybuitran) ([@hotsauce9000](https://github.com/hotsauce9000)).
+
 ## License
 
 MIT — see [LICENSE](LICENSE) for details.
