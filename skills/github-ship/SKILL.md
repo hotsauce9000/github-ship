@@ -13,14 +13,18 @@ After finishing implementation work (e.g., after executing a plan, fixing a bug,
 
 ## Workflow
 
-Execute these steps in order. Do not skip steps. Ask the user for confirmation only at the checkpoints marked **[CONFIRM]**.
+Execute these steps in order. Do not skip steps. At checkpoints marked **[CONFIRM]**, present the user with structured options (numbered list) rather than open-ended questions. This lets users respond with a number or short keyword instead of typing freeform.
 
 ### Step 0: Environment Check
 
 Before anything else, verify the project is ready for shipping:
 
 1. **Is this a git repo?** Run `git rev-parse --is-inside-work-tree`.
-   - If NOT a git repo: ask the user "This project isn't a git repository yet. Want me to set it up?" If yes:
+   - If NOT a git repo: ask the user: "This project isn't a git repository yet. Want me to set it up?"
+1. **Yes** — initialize git and configure remote
+2. **No** — stop workflow
+
+If yes:
      - Run `git init`
      - Ask: "What's the GitHub repo URL?" (e.g., `https://github.com/username/repo.git`)
      - Run `git remote add origin <url>`
@@ -99,7 +103,9 @@ ubs --diff .
 If no code files exist (docs-only changes), UBS will report "no recognizable languages" -- this is fine, move on silently.
 
 - If scan finds **critical** bugs: stop and report them. Help the user fix before continuing.
-- If scan finds **warnings** only: report them to the user but continue. Ask if they want to fix now or ship anyway.
+- If scan finds **warnings** only: report them to the user and ask:
+1. **Fix now** — stop and fix the warnings before shipping
+2. **Ship anyway** — continue with warnings noted
 - If scan is **clean** or **no code to scan**: move to Step 4.
 
 **If ubs is not available:** Skip silently and move to Step 4. Do not prompt the user to install it.
@@ -112,7 +118,10 @@ Analyze the changes and prepare:
 1. A one-line summary of what changed (for commit message)
 2. A categorization: is this a **bug fix**, **new feature**, **refactor**, **docs update**, or **mixed**?
 
-**[CONFIRM]** Present the summary and category to the user. Ask: "Ready to commit these changes?"
+**[CONFIRM]** Present the summary and category to the user, then ask:
+1. **Yes, commit** — proceed with staging and commit
+2. **No, abort** — stop the workflow
+3. **Edit first** — let me make changes before committing
 
 ### Step 5: Version Bump
 
@@ -128,7 +137,10 @@ Check if a `VERSION` file exists at project root.
 
 Reference `references/semver-guide.md` for the decision tree if unsure.
 
-For MAJOR bumps, **[CONFIRM]** with user before proceeding (breaking changes are significant).
+For MAJOR bumps, **[CONFIRM]** with the user:
+1. **Yes, major bump** — this is a breaking change, bump major version
+2. **Make it minor** — bump minor version instead
+3. **Make it patch** — bump patch version instead
 
 Write the new version to the `VERSION` file.
 
@@ -205,7 +217,9 @@ git tag -a v<VERSION> -m "Release v<VERSION>"
 
 ### Step 10: Push
 
-**[CONFIRM]** Ask user: "Push to origin/<branch> with tags?"
+**[CONFIRM]** Ask:
+1. **Yes, push** — push to origin/<branch> with tags
+2. **No, don't push** — keep changes local (committed but not pushed)
 
 If confirmed:
 
@@ -217,7 +231,9 @@ git push origin <branch> --follow-tags
 
 Check if `gh` CLI is available by running `gh --version`.
 
-**If gh is available:** Ask user if they want a GitHub Release created.
+**If gh is available:** Ask:
+1. **Yes, create release** — create a GitHub Release for this version
+2. **No, skip release** — no release this time
 
 If yes:
 
