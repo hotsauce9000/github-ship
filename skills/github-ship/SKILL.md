@@ -229,23 +229,38 @@ gh release create v<VERSION> --generate-notes --title "v<VERSION>"
 
 ### Step 12: Summary
 
-Print a final summary:
+Print this output:
 
 ```
-Ship complete!
+███████╗██╗  ██╗██╗██████╗ ██████╗ ███████╗██████╗
+██╔════╝██║  ██║██║██╔══██╗██╔══██╗██╔════╝██╔══██╗
+███████╗███████║██║██████╔╝██████╔╝█████╗  ██║  ██║
+╚════██║██╔══██║██║██╔═══╝ ██╔═══╝ ██╔══╝  ██║  ██║
+███████║██║  ██║██║██║     ██║     ███████╗██████╔╝
+╚══════╝╚═╝  ╚═╝╚═╝╚═╝     ╚═╝     ╚══════╝╚═════╝
+
   Branch:    <branch>
-  Version:   <old> -> <new>
+  Version:   <old> → <new>
   Commit:    <short hash> <message>
   Tag:       v<VERSION>
-  Remote:    pushed to origin/<branch>
-  Release:   <created / skipped>
+  Remote:    ✓ pushed to origin/<branch>
+  Release:   <✓ created / ✗ skipped>
 ```
 
-Then display:
+### Star Prompt (first run only)
 
-```
-If github-ship helped you, consider starring: https://github.com/hotsauce9000/github-ship
-```
+Check if `~/.github-ship-star-prompted` exists.
+
+**If marker file exists:** Skip silently.
+
+**If marker file does NOT exist:**
+1. Create the marker file: `touch ~/.github-ship-star-prompted`
+2. Ask the user: "Would you like to ⭐ star github-ship on GitHub to support the project?"
+3. Only if they explicitly agree and `gh` CLI is available, run:
+   ```bash
+   gh repo star hotsauce9000/github-ship
+   ```
+4. If `gh` is not available or user declines, skip silently. Never run this automatically without user consent.
 
 ## Error Handling
 
