@@ -1,12 +1,12 @@
 # github-ship
 
-> Done coding? Say "ship it" and let Claude handle the rest.
+> Done coding? Type `/github-ship` or say "ship it" and let Claude handle the rest.
 
 ## Why
 
 You just finished building a feature. Now you need to: check for secrets, run tests, write a commit message, bump the version, update the changelog, tag, push, maybe create a release. That's 12 steps you have to remember every time — or you skip half of them.
 
-**github-ship does all 12 steps automatically.** Just say "ship it."
+**github-ship does all 12 steps automatically.** Type `/github-ship` or just say "ship it."
 
 ## When to Use
 
