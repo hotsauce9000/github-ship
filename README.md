@@ -108,15 +108,15 @@ cp -r github-ship/skills/github-ship ~/.claude/skills/github-ship
 
 ## Usage
 
-After installation, just use any of these trigger phrases:
+**Slash command (recommended):** Type `/github-ship` — it auto-completes in Claude Code, so you don't have to remember anything.
+
+**Natural language:** You can also just say any of these and the skill will trigger automatically:
 
 - "ship it"
 - "commit this"
 - "push to GitHub"
 - "save my work"
 - "release this"
-
-Or invoke directly: `/github-ship`
 
 ## Optional Tools
 
