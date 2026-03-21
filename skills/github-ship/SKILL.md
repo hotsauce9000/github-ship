@@ -13,18 +13,35 @@ After finishing implementation work (e.g., after executing a plan, fixing a bug,
 
 ## Workflow
 
-Execute these steps in order. Do not skip steps. At checkpoints marked **[CONFIRM]**, present the user with structured options (numbered list) rather than open-ended questions. This lets users respond with a number or short keyword instead of typing freeform.
+Execute these steps in order. Do not skip steps.
+
+At checkpoints marked **[CONFIRM]**, use the **AskUserQuestion tool** to present options as an interactive picker menu. Always:
+- Place the recommended option **first** in the list
+- Add "(Recommended)" to the recommended option's label
+- Keep option descriptions concise (one line)
+
+**Auto-pilot mode:** If the user selected auto-pilot in Step 0a, skip all [CONFIRM] checkpoints and use the recommended option automatically. Only stop on critical safety gates (failing tests, detected secrets, UBS critical bugs). At the end, include a summary of all auto-decisions made.
+
+### Step 0a: Mode Selection
+
+**[CONFIRM]** Use AskUserQuestion to ask: "How do you want to run this?"
+- **Auto-pilot (Recommended)** — run all steps using recommended defaults, only stop on critical issues
+- **Interactive** — confirm each step manually
+
+Remember the user's choice — it controls whether [CONFIRM] checkpoints are shown or auto-resolved for the rest of the workflow.
 
 ### Step 0: Environment Check
 
 Before anything else, verify the project is ready for shipping:
 
 1. **Is this a git repo?** Run `git rev-parse --is-inside-work-tree`.
-   - If NOT a git repo: ask the user: "This project isn't a git repository yet. Want me to set it up?"
-1. **Yes** — initialize git and configure remote
-2. **No** — stop workflow
+   - If NOT a git repo: use AskUserQuestion to ask: "This project isn't a git repository yet. Want me to set it up?"
+     - **Yes, set it up (Recommended)** — initialize git and configure remote
+     - **No, stop** — exit the workflow
 
-If yes:
+     In auto-pilot mode: use recommended option.
+
+     If yes:
      - Run `git init`
      - Ask: "What's the GitHub repo URL?" (e.g., `https://github.com/username/repo.git`)
      - Run `git remote add origin <url>`
@@ -103,9 +120,11 @@ ubs --diff .
 If no code files exist (docs-only changes), UBS will report "no recognizable languages" -- this is fine, move on silently.
 
 - If scan finds **critical** bugs: stop and report them. Help the user fix before continuing.
-- If scan finds **warnings** only: report them to the user and ask:
-1. **Fix now** — stop and fix the warnings before shipping
-2. **Ship anyway** — continue with warnings noted
+- If scan finds **warnings** only: report them to the user. Use AskUserQuestion to ask:
+- **Ship anyway (Recommended)** — continue with warnings noted
+- **Fix now** — stop and fix the warnings before shipping
+
+In auto-pilot mode: use recommended option.
 - If scan is **clean** or **no code to scan**: move to Step 4.
 
 **If ubs is not available:** Skip silently and move to Step 4. Do not prompt the user to install it.
@@ -118,10 +137,12 @@ Analyze the changes and prepare:
 1. A one-line summary of what changed (for commit message)
 2. A categorization: is this a **bug fix**, **new feature**, **refactor**, **docs update**, or **mixed**?
 
-**[CONFIRM]** Present the summary and category to the user, then ask:
-1. **Yes, commit** — proceed with staging and commit
-2. **No, abort** — stop the workflow
-3. **Edit first** — let me make changes before committing
+**[CONFIRM]** Present the summary and category to the user. Use AskUserQuestion to ask:
+- **Yes, commit (Recommended)** — proceed with staging and commit
+- **Edit first** — let me make changes before committing
+- **No, abort** — stop the workflow
+
+In auto-pilot mode: use recommended option.
 
 ### Step 5: Version Bump
 
@@ -137,10 +158,12 @@ Check if a `VERSION` file exists at project root.
 
 Reference `references/semver-guide.md` for the decision tree if unsure.
 
-For MAJOR bumps, **[CONFIRM]** with the user:
-1. **Yes, major bump** — this is a breaking change, bump major version
-2. **Make it minor** — bump minor version instead
-3. **Make it patch** — bump patch version instead
+For MAJOR bumps, **[CONFIRM]** using AskUserQuestion:
+- **Yes, major bump (Recommended)** — this is a breaking change, bump major version
+- **Make it minor** — bump minor version instead
+- **Make it patch** — bump patch version instead
+
+In auto-pilot mode: use recommended option.
 
 Write the new version to the `VERSION` file.
 
@@ -217,9 +240,11 @@ git tag -a v<VERSION> -m "Release v<VERSION>"
 
 ### Step 10: Push
 
-**[CONFIRM]** Ask:
-1. **Yes, push** — push to origin/<branch> with tags
-2. **No, don't push** — keep changes local (committed but not pushed)
+**[CONFIRM]** Use AskUserQuestion to ask:
+- **Yes, push (Recommended)** — push to origin/<branch> with tags
+- **No, don't push** — keep changes local (committed but not pushed)
+
+In auto-pilot mode: use recommended option.
 
 If confirmed:
 
@@ -231,9 +256,11 @@ git push origin <branch> --follow-tags
 
 Check if `gh` CLI is available by running `gh --version`.
 
-**If gh is available:** Ask:
-1. **Yes, create release** — create a GitHub Release for this version
-2. **No, skip release** — no release this time
+**If gh is available:** Use AskUserQuestion to ask:
+- **Yes, create release (Recommended)** — create a GitHub Release for this version
+- **No, skip release** — no release this time
+
+In auto-pilot mode: use recommended option.
 
 If yes:
 

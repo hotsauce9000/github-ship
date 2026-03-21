@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.2.0] - 2026-03-21
+
+### Added
+- Auto-pilot mode (Step 0a) — run entire workflow with recommended defaults, only stopping on critical issues
+- AskUserQuestion interactive picker menus at all confirmation checkpoints with recommended option marked
+
+### Changed
+- All [CONFIRM] checkpoints now use AskUserQuestion tool for clickable interactive menus instead of plain numbered text lists
+- Workflow preamble updated with AskUserQuestion and auto-pilot mode instructions
+
 ## [1.1.0] - 2026-03-21
 
 ### Added
