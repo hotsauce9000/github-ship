@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+SKILL_MD="${PLUGIN_ROOT}/skills/github-ship/SKILL.md"
+
+escape_for_json() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    printf '%s' "$s"
+}
+
+# Read description from SKILL.md YAML frontmatter
+description=""
+if [ -f "$SKILL_MD" ]; then
+    in_frontmatter=false
+    while IFS= read -r line; do
+        if [[ "$line" == "---" ]]; then
+            if $in_frontmatter; then break; fi
+            in_frontmatter=true
+            continue
+        fi
+        if $in_frontmatter && [[ "$line" == description:* ]]; then
+            description="${line#description: }"
+        fi
+    done < "$SKILL_MD"
+fi
+
+if [ -z "$description" ]; then
+    description="You have the github-ship skill available. Invoke it when the user wants to ship, commit, or push code."
+fi
+
+session_context="You have the github-ship skill available. ${description}"
+escaped=$(escape_for_json "$session_context")
+
+if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+  printf '{\n  "additional_context": "%s"\n}\n' "$escaped"
+elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$escaped"
+else
+  printf '{\n  "additional_context": "%s"\n}\n' "$escaped"
+fi
+
+exit 0
