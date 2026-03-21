@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.1.0] - 2026-03-21
+
+### Added
+- Block-style SHIPPED ASCII art banner in Step 12 summary output
+- First-run-only interactive star prompt using `gh repo star` (gated by `~/.github-ship-star-prompted` marker file)
+- Structured prompt options (numbered lists) at all 6 confirmation checkpoints
+- SHIPPED ASCII art banner at top of README
+
+### Changed
+- Step 12 summary now uses checkmarks (✓/✗) and arrow (→) instead of plain text
+- All confirmation points now present numbered options instead of open-ended questions
+
 ## [1.0.0] - 2026-03-20
 
 ### Added
