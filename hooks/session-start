@@ -24,6 +24,7 @@ read_description() {
     if [ -f "$skill_md" ]; then
         local in_frontmatter=false
         while IFS= read -r line; do
+            line="${line%$'\r'}"
             if [[ "$line" == "---" ]]; then
                 if $in_frontmatter; then break; fi
                 in_frontmatter=true
