@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.1.1] - 2026-03-27
+
+### Fixed
+- Cross-skill path references — `/github-pr` now has its own `references/` directory instead of relying on `../github-ship/references/` (broke after manual `cp -r` install)
+- Secret scan false positives in `/save` — keyword patterns (`token`, `credential`, etc.) now use word-boundary matching instead of substring matching; `token_manager.py` no longer blocked
+- Missing `.gitignore` handling — `/github-pr` and `/github-ship` now create one with standard patterns if none exists
+- Merge conflict handling — all three skills now guide users through `git rebase` conflict resolution instead of just saying "stop and report"
+- Commit grouping threshold aligned to `4+ files` in both `/github-pr` and `/github-ship` (was `3+` in `/github-ship`)
+- `sort -V` replaced with portable `_ver_gte` bash function in `bin/update-check` (BSD sort on older macOS lacks `-V`)
+- LOCAL version validated with semver regex before comparison in `bin/update-check` (prevents crash on pre-release strings like `2.1.0-beta`)
+- CRLF line ending handling in `hooks/session-start` — frontmatter parsing now strips `\r` before matching
+- Stderr warnings added to `hooks/session-start` when SKILL.md descriptions can't be read (was silent fallback)
+- LOCALAPPDATA Git path check added to `hooks/run-hook.cmd` for Windows winget installs
+- `package.json` version synced to `2.1.0` (was still `2.0.0`)
+
+### Added
+- Test infrastructure: 5 bash test scripts with 114 assertions, runnable via `npm test`
+- `tests/test-session-start.sh` — 6 tests covering happy path, env detection, missing SKILL.md, JSON escaping
+- `tests/test-update-check.sh` — 9 tests covering version comparison, caching, snooze, disabled check, just-upgraded marker
+- `tests/validate-skills.sh` — structural validation of all SKILL.md files (frontmatter, preamble, required sections)
+- `tests/validate-references.sh` — path integrity, cross-skill reference detection, orphan files, drift sync between duplicated references
+- `tests/validate-consistency.sh` — cross-skill consistency (thresholds, commit types, platform detection, language order)
+- Explicit match/no-match examples in `/save` secret scan spec for LLM interpretation clarity
+
 ## [2.1.0] - 2026-03-27
 
 ### Added

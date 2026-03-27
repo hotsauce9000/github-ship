@@ -151,7 +151,7 @@ For enhanced bug scanning, install [Ultimate Bug Scanner](https://github.com/Dic
 - **No test runner detected:** Expected for docs-only or unsupported-language projects. `/github-pr` and `/github-ship` warn and continue. `/save` doesn't run tests.
 - **PR creation fails:** Code is already pushed. Create the PR manually via the web UI.
 - **GitLab not detected:** Ensure `glab` CLI is installed and authenticated (`glab auth status`).
-- **Secret false positive:** `/save` blocks files matching secret patterns (`.env`, `*.pem`, `*.key`, `credential`, `secret`, `token`, `password` in filename). If it's a false positive, rename the file or use `/github-ship` which has a full .gitignore audit instead.
+- **Secret false positive:** `/save` blocks files matching exact secret patterns (`.env`, `*.pem`, `*.key`) and warns on keyword patterns (`credential`, `secret`, `token`, `password` as standalone words in filename). Keyword warnings let you choose to include the file. Compound names like `token_manager.py` are not flagged.
 
 ## Acknowledgments
 
