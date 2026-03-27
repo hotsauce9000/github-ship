@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.1.0] - 2026-03-27
+
+### Added
+- Auto-update notifications — checks for new versions when any skill is invoked (/save, /github-pr, /github-ship)
+- 4-option upgrade menu: upgrade now, auto-upgrade, snooze (escalating 24h/48h/7d), disable
+- `bin/update-check` script with caching (60min up-to-date, 720min upgrade-available)
+- Semver comparison prevents presenting downgrades as upgrades
+- Security: VERSION response validated with semver regex to block prompt injection
+- Upgrade uses `git pull` (safe, preserves local changes) not `git reset --hard`
+- Marketplace installs auto-detected and skipped (platform handles updates)
+- `--force` flag for manual cache/snooze busting
+
 ## [2.0.0] - 2026-03-26
 
 ### Added
