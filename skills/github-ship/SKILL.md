@@ -306,7 +306,7 @@ In auto-pilot mode: use recommended option.
 
 ### Step 4b: Commit Grouping (opt-in)
 
-If the diff touches **3+ files across 2+ logical concerns** (e.g., feature code + bug fix + docs), offer to split into grouped commits.
+If the diff touches **4+ files across 2+ logical concerns** (e.g., feature code + bug fix + docs), offer to split into grouped commits.
 
 1. **Classify each changed file** by its primary concern:
    - `feat` — new feature code or feature tests
