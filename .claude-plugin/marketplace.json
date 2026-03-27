@@ -8,8 +8,8 @@
   "plugins": [
     {
       "name": "github-ship",
-      "description": "Automated post-coding workflow: pre-flight checks, gitignore audit, tests, versioning, changelog, commit, push, and GitHub release",
-      "version": "1.0.0",
+      "description": "Three commands: /save (quick commits), /github-pr (team PRs), /github-ship (solo releases). Pre-flight checks, tests, versioning, changelog, and GitHub/GitLab support.",
+      "version": "2.0.0",
       "source": "./"
     }
   ]
