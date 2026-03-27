@@ -42,12 +42,15 @@ pr_desc=$(read_description "$PR_SKILL_MD")
 save_desc=$(read_description "$SAVE_SKILL_MD")
 
 if [ -z "$ship_desc" ]; then
+    echo "github-ship: WARNING — could not read description from ${SHIP_SKILL_MD}" >&2
     ship_desc="Invoke /github-ship when the user wants to ship, commit, tag, and release code."
 fi
 if [ -z "$pr_desc" ]; then
+    echo "github-ship: WARNING — could not read description from ${PR_SKILL_MD}" >&2
     pr_desc="Invoke /github-pr when the user wants to open a pull request for team review."
 fi
 if [ -z "$save_desc" ]; then
+    echo "github-ship: WARNING — could not read description from ${SAVE_SKILL_MD}" >&2
     save_desc="Invoke /save for a quick commit and push without the full ceremony."
 fi
 
