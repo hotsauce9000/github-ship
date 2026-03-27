@@ -217,6 +217,8 @@ Report findings to user as a brief summary: branch name, number of files changed
 
 ### Step 2: .gitignore Audit
 
+**If no `.gitignore` exists:** Create one. Use the detected language reference to populate it with standard patterns. Always include entries from `references/gitignore-general.md` (secrets, IDE, OS files). Inform user: "No .gitignore found — created one with standard [language] patterns."
+
 Read the project's `.gitignore` file. Detect the project's primary language using this priority order (check in order, use first match):
 
 1. Python: `requirements.txt`, `setup.py`, `pyproject.toml`, or `*.py` files → use `references/gitignore-python.md`
