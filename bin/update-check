@@ -39,6 +39,10 @@ fi
 if [ -z "$LOCAL" ]; then
   exit 0
 fi
+# Validate LOCAL is clean semver (reject pre-release like 2.1.0-beta)
+if ! echo "$LOCAL" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+  exit 0
+fi
 
 # --- Check "just upgraded" marker ---
 if [ -f "$MARKER_FILE" ]; then
@@ -134,8 +138,17 @@ if [ "$LOCAL" = "$REMOTE" ]; then
 fi
 
 # Semver comparison: if LOCAL >= REMOTE, treat as up-to-date (prevents downgrade)
-HIGHEST=$(printf '%s\n' "$LOCAL" "$REMOTE" | sort -V | tail -1)
-if [ "$HIGHEST" = "$LOCAL" ]; then
+# Portable — no sort -V (unavailable on older macOS BSD sort)
+_ver_gte() {
+  local IFS=.
+  local -a a=($1) b=($2)
+  for i in 0 1 2; do
+    [ "${a[i]:-0}" -gt "${b[i]:-0}" ] && return 0
+    [ "${a[i]:-0}" -lt "${b[i]:-0}" ] && return 1
+  done
+  return 0  # equal
+}
+if _ver_gte "$LOCAL" "$REMOTE"; then
   echo "UP_TO_DATE $LOCAL" > "$CACHE_FILE"
   exit 0
 fi
