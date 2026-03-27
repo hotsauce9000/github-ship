@@ -262,11 +262,51 @@ Check if `gh` CLI is available by running `gh --version`.
 
 In auto-pilot mode: use recommended option.
 
-If yes:
+If yes, extract release notes from the CHANGELOG you just wrote (Step 6) and create a release with a descriptive title:
 
 ```bash
-gh release create v<VERSION> --generate-notes --title "v<VERSION>"
+# 1. Extract body: text between this version's ## header and next --- or ## v
+awk '
+  /^## v/ { if (found) exit; found=1; next }
+  /^---$/ { if (found) exit }
+  found { print }
+' CHANGELOG.md | sed \
+  -e 's/^### Added — /### /' \
+  -e 's/^### Added - /### /' \
+  -e 's/^### Changed.*/### Changes/' \
+  -e 's/^### Fixed.*/### Fixes/' \
+  -e 's/^### Removed.*/### Removed/' \
+> /tmp/release-notes.md
+
+# 2. Prepend "What's New" header
+{ echo "## What's New"; echo ""; cat /tmp/release-notes.md; } > /tmp/release-body.md
+
+# 3. Extract descriptive title suffix from first "### Added — X" heading (before sed)
+#    Falls back to first bullet point if no descriptive heading found
+TITLE_SUFFIX=$(awk '
+  /^## v/ { if (found) exit; found=1; next }
+  /^---$/ { if (found) exit }
+  found && /^### Added — / { sub(/^### Added — /, ""); print; exit }
+  found && /^### Added - / { sub(/^### Added - /, ""); print; exit }
+' CHANGELOG.md)
+if [ -z "$TITLE_SUFFIX" ]; then
+  TITLE_SUFFIX=$(awk '
+    /^## v/ { if (found) exit; found=1; next }
+    /^---$/ { if (found) exit }
+    found && /^- / { sub(/^- /, ""); gsub(/`/, ""); print; exit }
+  ' CHANGELOG.md)
+fi
+# Truncate to 60 chars for a clean title
+TITLE_SUFFIX="${TITLE_SUFFIX:-Release}"
+TITLE_SUFFIX="${TITLE_SUFFIX:0:60}"
+
+# 4. Create the release
+gh release create v<VERSION> \
+  --notes-file /tmp/release-body.md \
+  --title "v<VERSION> — $TITLE_SUFFIX"
 ```
+
+**Important:** Do NOT use `--generate-notes`. Always use the CHANGELOG-based extraction above so the release body matches the CHANGELOG entry.
 
 **If gh is not available:** Inform user they can install GitHub CLI (`gh`) to create releases from the command line in the future. Provide the install link: https://cli.github.com/
 
