@@ -3,6 +3,33 @@
 All notable changes to this project will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.0.0] - 2026-03-26
+
+### Added
+- `/save` skill — fast commit+push with no ceremony (6 steps: status, secret scan, stage, commit, push, done)
+- `/github-pr` skill — team PR workflow with 10 steps: environment check, branch management, .gitignore audit, tests, diff review, commit, push, PR creation, reviewers/labels, summary
+- PR body templates using Problem / Solution / Why / Test plan structure (non-trivial) or 1-2 sentence summary (trivial)
+- Existing-PR detection — checks if a PR already exists before creating a new one
+- Platform detection — auto-detect GitHub vs GitLab from remote URL, with CLI fallback
+- Base branch detection — 4-step fallback chain (existing PR → repo default → git symbolic-ref → `main`)
+- Test failure triage — classify failures as in-branch (must fix) vs pre-existing (can override)
+- Commit grouping in `/github-ship` — opt-in split of multi-concern changes into logical commits
+- Verification gate — re-run tests if code changed between test step and push/tag
+- CHANGELOG cross-check — verify every commit maps to at least one changelog bullet
+- Bisectable commits in `/github-pr` — offer to split multi-concern changes
+- GitLab support — `glab` CLI for MR creation and releases alongside `gh` for GitHub
+- Branch safety check in `/github-ship` — warns if shipping from a feature branch
+- Draft PR support in `/github-pr`
+- Reviewer suggestions from CODEOWNERS and recent PR history
+- Label suggestions based on change category
+
+### Changed
+- `/github-ship` Step 11 (GitHub Release) now uses CHANGELOG entry as release body instead of `--generate-notes`
+- `/github-ship` description no longer includes "save my work" (now handled by `/save`)
+- SessionStart hook registers all three skills: `/save`, `/github-pr`, `/github-ship`
+- Plugin metadata updated for all platforms (Claude Code, Cursor, Codex, Gemini CLI)
+- README rewritten with decision table, side-by-side comparison, and all three workflows
+
 ## [1.2.0] - 2026-03-21
 
 ### Added
