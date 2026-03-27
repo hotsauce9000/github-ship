@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.1.3] - 2026-03-27
+
+### Added
+- `/save` summary now includes a clickable commit URL
+- `/github-ship` summary now includes the release URL when a release is created
+
 ## [2.1.2] - 2026-03-27
 
 ### Changed

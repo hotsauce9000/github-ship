@@ -544,7 +544,7 @@ Print this output:
   Commit:    <short hash> <message>
   Tag:       v<VERSION>
   Remote:    ✓ pushed to origin/<branch>
-  Release:   <✓ created / ✗ skipped>
+  Release:   <✓ created — release URL / ✗ skipped>
 ```
 
 ### Star Prompt (first run only)

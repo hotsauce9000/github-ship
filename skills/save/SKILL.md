@@ -197,6 +197,8 @@ If the rebase encounters merge conflicts: stop and show conflicted files. Help t
 
 ### Step 6: Done
 
+Construct the commit URL from the remote origin URL and the commit hash. Derive the base URL from `git remote get-url origin` (strip `.git` suffix if present, convert SSH to HTTPS), then append `/commit/<full hash>` where the full hash comes from `git rev-parse HEAD`.
+
 Print:
 ```
 ███████╗ █████╗ ██╗   ██╗███████╗
@@ -210,6 +212,7 @@ Print:
   Branch:  <branch>
   Commit:  <short hash> — <message>
   Remote:  pushed to origin/<branch>
+  URL:     <commit URL>
 ```
 
 ## Important Rules
