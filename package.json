@@ -1,5 +1,8 @@
 {
   "name": "github-ship",
-  "version": "2.0.0",
-  "type": "module"
+  "version": "2.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "bash tests/test-session-start.sh && bash tests/test-update-check.sh && bash tests/validate-skills.sh && bash tests/validate-references.sh && bash tests/validate-consistency.sh"
+  }
 }
