@@ -17,6 +17,14 @@ if "%~1"=="" (
 
 set "HOOK_DIR=%~dp0"
 
+REM Try user-local Git for Windows (winget user-scope installs)
+if defined LOCALAPPDATA (
+    if exist "%LOCALAPPDATA%\Programs\Git\bin\bash.exe" (
+        "%LOCALAPPDATA%\Programs\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
+        exit /b %ERRORLEVEL%
+    )
+)
+
 REM Try Git for Windows bash in standard locations
 if exist "C:\Program Files\Git\bin\bash.exe" (
     "C:\Program Files\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
