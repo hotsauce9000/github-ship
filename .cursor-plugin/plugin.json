@@ -1,8 +1,8 @@
 {
   "name": "github-ship",
   "displayName": "GitHub Ship",
-  "description": "Automated post-coding workflow: pre-flight checks, gitignore audit, tests, versioning, changelog, commit, push, and GitHub release",
-  "version": "1.0.0",
+  "description": "Three shipping workflows: /save for quick commits, /github-pr for team pull requests, /github-ship for solo releases. Handles pre-flight checks, tests, versioning, changelog, and GitHub/GitLab support.",
+  "version": "2.0.0",
   "author": {
     "name": "hotsauce9000",
     "url": "https://github.com/hotsauce9000"
@@ -10,7 +10,7 @@
   "homepage": "https://github.com/hotsauce9000/github-ship",
   "repository": "https://github.com/hotsauce9000/github-ship",
   "license": "MIT",
-  "keywords": ["shipping", "git", "release", "versioning", "changelog", "workflow"],
+  "keywords": ["shipping", "git", "release", "versioning", "changelog", "workflow", "save"],
   "skills": "./skills/",
   "hooks": "./hooks/hooks-cursor.json"
 }
