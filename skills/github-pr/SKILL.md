@@ -232,16 +232,16 @@ In auto-pilot mode: use recommended option. Generate branch name from the most r
 
 Read the project's `.gitignore` file. Detect the project's primary language using this priority order (check in order, use first match):
 
-1. Python: `requirements.txt`, `setup.py`, `pyproject.toml`, or `*.py` files → use `../github-ship/references/gitignore-python.md`
-2. Node/JS/TS: `package.json`, `*.js`, or `*.ts` files → use `../github-ship/references/gitignore-node.md`
-3. Rust: `Cargo.toml` or `*.rs` files → use `../github-ship/references/gitignore-rust.md`
-4. Go: `go.mod` or `*.go` files → use `../github-ship/references/gitignore-go.md`
-5. Ruby: `Gemfile` or `*.rb` files → use `../github-ship/references/gitignore-ruby.md`
-6. PHP: `composer.json` or `*.php` files → use `../github-ship/references/gitignore-php.md`
-7. Java: `pom.xml`, `build.gradle`, or `*.java` files → use `../github-ship/references/gitignore-java.md`
-8. Fallback: use `../github-ship/references/gitignore-general.md`
+1. Python: `requirements.txt`, `setup.py`, `pyproject.toml`, or `*.py` files → use `references/gitignore-python.md`
+2. Node/JS/TS: `package.json`, `*.js`, or `*.ts` files → use `references/gitignore-node.md`
+3. Rust: `Cargo.toml` or `*.rs` files → use `references/gitignore-rust.md`
+4. Go: `go.mod` or `*.go` files → use `references/gitignore-go.md`
+5. Ruby: `Gemfile` or `*.rb` files → use `references/gitignore-ruby.md`
+6. PHP: `composer.json` or `*.php` files → use `references/gitignore-php.md`
+7. Java: `pom.xml`, `build.gradle`, or `*.java` files → use `references/gitignore-java.md`
+8. Fallback: use `references/gitignore-general.md`
 
-**Always** also check the entries in `../github-ship/references/gitignore-general.md` (secrets, IDE files, OS files) regardless of which language-specific reference matched.
+**Always** also check the entries in `references/gitignore-general.md` (secrets, IDE files, OS files) regardless of which language-specific reference matched.
 
 Check for:
 - Files that SHOULD be ignored but are not
