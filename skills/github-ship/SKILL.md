@@ -1,6 +1,6 @@
 ---
 name: github-ship
-description: This skill should be used when the user is done coding and wants to save, commit, and ship their work to GitHub. It handles the full post-coding workflow including pre-flight checks, .gitignore audit, test execution, version bumping, changelog updates, committing, pushing, and creating GitHub releases. Trigger phrases include "ship it", "commit this", "push to GitHub", "save my work", "release this", "github ship", or any request to finalize and push code changes.
+description: This skill should be used when the user is done coding and wants to save, commit, and ship their work to GitHub. It handles the full post-coding workflow including pre-flight checks, .gitignore audit, test execution, version bumping, changelog updates, committing, pushing, and creating GitHub releases. Trigger phrases include "ship it", "commit this", "push to GitHub", "release this", "github ship", or any request to finalize and push code changes. For quick saves without the full ceremony, use /save instead.
 ---
 
 # GitHub Ship
@@ -58,6 +58,13 @@ Before anything else, verify the project is ready for shipping:
    - If auth fails: inform the user: "Can't reach the remote. You may need to authenticate. Try running `gh auth login` or check your SSH keys." Stop workflow — pushing will fail without auth.
    - If OK: continue to Step 1.
 
+4. **Detect platform** from remote URL:
+   - Run `git remote get-url origin 2>/dev/null`
+   - If URL contains "github.com" → platform is **GitHub**
+   - If URL contains "gitlab" → platform is **GitLab**
+   - Otherwise check CLI: `gh auth status 2>/dev/null` succeeds → **GitHub**; `glab auth status 2>/dev/null` succeeds → **GitLab**
+   - Neither → **unknown** (use git-native commands only)
+
 ### Step 1: Pre-Flight Checks
 
 Run these checks in parallel:
@@ -65,6 +72,12 @@ Run these checks in parallel:
 1. **Git status** -- run `git status` to see all changed, staged, and untracked files
 2. **Branch check** -- confirm which branch is active via `git branch --show-current`
 3. **Remote check** -- confirm remote exists via `git remote -v`
+
+**Detect base branch** using this fallback chain:
+1. `gh pr view --json baseRefName -q .baseRefName 2>/dev/null` (existing PR)
+2. `gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null` (repo default)
+3. `git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||'`
+4. Fall back to `main`
 
 Report findings to user as a brief summary: branch name, number of files changed/added/deleted.
 
@@ -105,7 +118,18 @@ Detect and run the project's test suite. Check in this order, use first match:
 **If no recognizable test setup found:** Warn the user ("No test runner detected — skipping tests") and continue to Step 3b. Do NOT block the workflow.
 
 - If tests **pass**: move to Step 3b
-- If tests **fail**: stop and report failures. Do NOT continue shipping with failing tests. Help the user fix the failures first.
+- If tests **fail** — triage each failure:
+  1. Get files changed since base: `git diff origin/<base>...HEAD --name-only`
+  2. For each failing test, classify:
+     - **In-branch** if: the test file or code-under-test was modified on this branch
+     - **Pre-existing** if: neither was modified and failure is unrelated to branch changes
+     - **When ambiguous, default to in-branch** (safer)
+  3. **In-branch failures:** STOP. Report and help fix. Do NOT continue.
+  4. **Pre-existing failures:** Warn user. Use AskUserQuestion:
+     - **Continue anyway (Recommended)** — these existed before your changes
+     - **Fix now** — investigate before continuing
+     - **Abort** — stop the workflow
+  In auto-pilot mode: continue for pre-existing, stop for in-branch.
 
 ### Step 3b: Bug Scan (UBS)
 
@@ -143,6 +167,41 @@ Analyze the changes and prepare:
 - **No, abort** — stop the workflow
 
 In auto-pilot mode: use recommended option.
+
+### Step 4b: Commit Grouping (opt-in)
+
+If the diff touches **3+ files across 2+ logical concerns** (e.g., feature code + bug fix + docs), offer to split into grouped commits.
+
+1. **Classify each changed file** by its primary concern:
+   - `feat` — new feature code or feature tests
+   - `fix` — bug fix code or bug fix tests
+   - `refactor` — restructuring without behavior change
+   - `docs` — documentation, README, comments
+   - `test` — test-only changes (not tied to a specific feat/fix)
+   - `chore` — config, CI, tooling, dependencies
+
+2. **Present a grouping table:**
+
+```
+Proposed commit groups:
+  Group 1 (feat):     src/auth.ts, src/auth.test.ts
+  Group 2 (fix):      src/billing.ts
+  Group 3 (docs):     README.md
+  Meta (final group): VERSION, CHANGELOG.md
+```
+
+3. **[CONFIRM]** — **always shown, even in auto-pilot mode** (this is a safety gate):
+   - **Use these groups (Recommended)** — commit each group separately with a group-specific message
+   - **Adjust groups** — let me reorganize before committing
+   - **Single commit** — commit everything together as usual
+
+**Rules:**
+- Meta files (VERSION, CHANGELOG.md, .gitignore) always go in the **last** group.
+- If the concern classification is ambiguous for a file (could be feat or refactor), collapse to **single commit** automatically. Don't guess.
+- If only 1-2 concerns detected, or fewer than 3 files changed, skip this step entirely — no prompt.
+- If user selects "Adjust groups," ask them to describe the grouping. Re-present and confirm again.
+
+Store the grouping decision for use in Step 8.
 
 ### Step 5: Version Bump
 
@@ -195,6 +254,11 @@ Categorize changes under these headers (only include headers that apply):
 
 Write entries by reading the actual diff, not generic descriptions. Each entry should be one concise line describing what was done and why.
 
+**Cross-check:** After writing the entry:
+1. Enumerate all commits: `git log <base>..HEAD --oneline`
+2. Verify every commit maps to at least one CHANGELOG bullet
+3. If any commit is unrepresented, add it
+
 ### Step 7: Check README
 
 Check if `README.md` exists at project root.
@@ -204,6 +268,10 @@ Check if `README.md` exists at project root.
 **If README exists:** Scan it briefly. Flag if anything is obviously outdated based on the current changes (e.g., removed a script that's still documented, changed CLI flags). Do not rewrite the README -- just flag issues for the user.
 
 ### Step 8: Commit
+
+**If commit grouping was accepted in Step 4b**, loop through each group. **Otherwise**, make a single commit as before.
+
+#### Single commit (default):
 
 Stage all relevant files. Be deliberate about what gets staged:
 
@@ -230,6 +298,42 @@ Where `<type>` is one of: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
 
 Use a HEREDOC for the commit message to preserve formatting.
 
+#### Grouped commits (from Step 4b):
+
+For each group in order (non-meta groups first, meta group last):
+
+1. **Stage only the files in this group:**
+   ```bash
+   git add <file1> <file2> ...
+   ```
+
+2. **Write a group-specific commit message:**
+   ```
+   <group type>: <description of this group's changes>
+
+   Co-Authored-By: Claude <noreply@anthropic.com>
+   ```
+
+3. **Commit** using a HEREDOC for the message.
+
+4. **If any commit fails:** Stop immediately. Report which group failed and why. Do not continue to the next group.
+
+**Final group (meta):** Stage and commit VERSION, CHANGELOG.md, and any other meta files (.gitignore if modified) together:
+```
+chore: bump version to <VERSION> and update changelog
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+### Step 8b: Verification Gate
+
+**If any code changed after Step 3's test run** (e.g., .gitignore fixes, CHANGELOG edits that touched code):
+- Re-run the test suite using the same command from Step 3
+- If tests fail: STOP. Do not tag or push. Fix the issue.
+- If tests pass: continue.
+
+**If no code changed since Step 3:** Skip — the earlier test run is still valid.
+
 ### Step 9: Tag
 
 Create a git tag for the new version:
@@ -246,6 +350,10 @@ git tag -a v<VERSION> -m "Release v<VERSION>"
 
 In auto-pilot mode: use recommended option.
 
+**Branch safety check:**
+- If NOT on main/master or the detected base branch: warn "You're on `<branch>`, not the base branch. Ship typically pushes to main. Continue anyway, or switch first?"
+  In auto-pilot mode: warn but continue.
+
 If confirmed:
 
 ```bash
@@ -256,19 +364,32 @@ git push origin <branch> --follow-tags
 
 Check if `gh` CLI is available by running `gh --version`.
 
-**If gh is available:** Use AskUserQuestion to ask:
-- **Yes, create release (Recommended)** — create a GitHub Release for this version
+**If gh is available or glab is available:** Use AskUserQuestion to ask:
+- **Yes, create release (Recommended)** — create a GitHub/GitLab Release for this version
 - **No, skip release** — no release this time
 
 In auto-pilot mode: use recommended option.
 
 If yes:
+1. Extract the CHANGELOG entry for this version (the text between the `## [VERSION]` header and the next `## [` or `---`)
+2. Write it to a temp file as the release body
+3. Derive a title suffix from the first `### Added` heading or first bullet point
 
+**If GitHub:**
 ```bash
-gh release create v<VERSION> --generate-notes --title "v<VERSION>"
+gh release create v<VERSION> \
+  --title "v<VERSION> — <title suffix>" \
+  --notes-file /tmp/release-notes.md
 ```
 
-**If gh is not available:** Inform user they can install GitHub CLI (`gh`) to create releases from the command line in the future. Provide the install link: https://cli.github.com/
+**If GitLab:**
+```bash
+glab release create v<VERSION> \
+  --name "v<VERSION> — <title suffix>" \
+  --notes-file /tmp/release-notes.md
+```
+
+**If neither CLI is available:** Inform user they can install GitHub CLI (`gh`) or GitLab CLI (`glab`) to create releases. Links: https://cli.github.com/ or https://gitlab.com/gitlab-org/cli
 
 ### Step 12: Summary
 

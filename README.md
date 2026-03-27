@@ -9,59 +9,44 @@
 
 # github-ship
 
-> Done coding? Type `/github-ship` or say "ship it" and let Claude handle the rest.
+> Done coding? Three commands:
+> - `/save` — quick checkpoint. Commit and push, nothing else.
+> - `/github-pr` — working with a team? Open a PR.
+> - `/github-ship` — working solo? Tag and release.
 
-## Why
+## When to Use What
 
-You just finished building a feature. Now you need to: check for secrets, run tests, write a commit message, bump the version, update the changelog, tag, push, maybe create a release. That's 12 steps you have to remember every time — or you skip half of them.
+| Situation | Command |
+|-----------|---------|
+| Quick checkpoint mid-session | `/save` |
+| Feature branch → PR for review | `/github-pr` |
+| Bug fix → PR for review | `/github-pr` |
+| Solo project → release | `/github-ship` |
+| Merged PR → cut a release | `/github-ship` |
+| First time shipping anything | Any — all handle git setup |
 
-**github-ship does all 12 steps automatically.** Type `/github-ship` or just say "ship it."
+## What Each Command Does
 
-## When to Use
-
-- After finishing a feature or bug fix
-- After executing an implementation plan
-- Any time you'd normally run `git add`, `git commit`, `git push`
-- When you want a proper release with version bump, changelog, and GitHub release
-- First time shipping a project (github-ship will set up git and remotes for you)
-
-## Before / After
-
-**Before github-ship:**
-
-```
-git add... git commit... forgot to update changelog... forgot VERSION...
-git push... oh wait, .env is in there... git reset... fix .gitignore...
-git add again... git commit --amend... git push...
-```
-
-**After github-ship:**
-
-```
-"Ship it."
-Done.
-```
-
-## What It Does
-
-github-ship runs a 12-step workflow:
-
-| Step | What | Details |
-|------|------|---------|
-| 0 | Environment Check | Verifies git repo exists, remote configured, auth works. Sets up if missing. |
-| 1 | Pre-Flight | Branch, remote, changed files summary |
-| 2 | .gitignore Audit | Detects language, checks against best practices |
-| 3 | Run Tests | Auto-detects test runner for your language |
-| 3b | Bug Scan | Runs UBS if installed (optional) |
-| 4 | Diff Review | Summarizes changes, asks for confirmation |
-| 5 | Version Bump | Semantic versioning (patch/minor/major) |
-| 6 | Changelog | Auto-generates from diff |
-| 7 | README Check | Flags outdated docs |
-| 8 | Commit | Specific file staging, conventional commits |
-| 9 | Tag | Git tag with version |
-| 10 | Push | Push with tags (asks first) |
-| 11 | GitHub Release | Creates release via `gh` CLI (optional) |
-| 12 | Summary | Final report |
+| | `/save` | `/github-pr` | `/github-ship` |
+|---|---|---|---|
+| Environment check | | ✓ | ✓ |
+| Platform detection (GitHub/GitLab) | | ✓ | ✓ |
+| Branch management | | ✓ Creates feature branch if needed | Warns if not on main |
+| .gitignore audit | | ✓ | ✓ |
+| Secret filename scan | ✓ | ✓ | ✓ |
+| Run tests | | ✓ With failure triage | ✓ With failure triage |
+| Bug scan (UBS) | | ✓ | ✓ |
+| Diff review + commit | ✓ Auto | ✓ With bisectable commits | ✓ With opt-in grouping |
+| Verification gate | | ✓ Re-runs tests if code changed | ✓ Re-runs tests if code changed |
+| Version bump | | | ✓ |
+| Changelog | | | ✓ With cross-check |
+| README check | | | ✓ |
+| Tag | | | ✓ |
+| Push | To current branch | To feature branch | To main with tags |
+| Create PR | | ✓ With Problem/Solution/Why format | |
+| Reviewers & labels | | ✓ Suggests from CODEOWNERS | |
+| GitHub/GitLab Release | | | ✓ From changelog |
+| Speed | ~5 seconds | ~1 minute | ~2 minutes |
 
 ## Supported Languages
 
@@ -75,6 +60,14 @@ github-ship runs a 12-step workflow:
 | PHP | gitignore-php.md | `vendor/bin/phpunit` |
 | Java | gitignore-java.md | `./gradlew test` or `mvn test` |
 | Other | gitignore-general.md | Warns and continues |
+
+## Supported Platforms
+
+| Platform | PR/MR Creation | Release Creation | Detection |
+|----------|---------------|-----------------|-----------|
+| GitHub | `gh pr create` | `gh release create` | Remote URL or `gh auth status` |
+| GitLab | `glab mr create` | `glab release create` | Remote URL or `glab auth status` |
+| Other | Manual (prints instructions) | Manual | Fallback |
 
 ## Installation
 
@@ -111,25 +104,38 @@ gemini extensions install https://github.com/hotsauce9000/github-ship
 
 ```bash
 git clone https://github.com/hotsauce9000/github-ship.git
-# Copy or symlink the skill:
+# Copy or symlink all three skills:
+cp -r github-ship/skills/save ~/.claude/skills/save
 cp -r github-ship/skills/github-ship ~/.claude/skills/github-ship
+cp -r github-ship/skills/github-pr ~/.claude/skills/github-pr
 ```
 
 ## Usage
 
-**Slash command (recommended):** Type `/github-ship` — it auto-completes in Claude Code, so you don't have to remember anything.
+**`/save`** (slash command or natural language):
+- "save"
+- "save my work"
+- "quick save"
+- "just commit"
+- "commit and push"
 
-**Natural language:** You can also just say any of these and the skill will trigger automatically:
+**`/github-pr`** (slash command or natural language):
+- "open a PR"
+- "create a PR"
+- "submit for review"
+- "push for review"
 
+**`/github-ship`** (slash command or natural language):
 - "ship it"
 - "commit this"
 - "push to GitHub"
-- "save my work"
 - "release this"
+
+All three commands support **auto-pilot mode** — run the workflow with recommended defaults, only stopping on critical issues (except `/save`, which has no confirmations by design).
 
 ## Optional Tools
 
-For enhanced bug scanning, install [Ultimate Bug Scanner](https://github.com/Dicklesworthstone/ultimate_bug_scanner). If installed, github-ship automatically runs a bug scan before committing. If not installed, the step is silently skipped.
+For enhanced bug scanning, install [Ultimate Bug Scanner](https://github.com/Dicklesworthstone/ultimate_bug_scanner). If installed, `/github-pr` and `/github-ship` automatically run a bug scan before committing. If not installed, the step is silently skipped.
 
 ## Updating
 
@@ -139,14 +145,17 @@ For enhanced bug scanning, install [Ultimate Bug Scanner](https://github.com/Dic
 
 ## Troubleshooting
 
-- **Skill doesn't auto-trigger:** Invoke manually with `/github-ship`. The auto-trigger hook requires bash. On Windows, install [Git for Windows](https://gitforwindows.org/).
-- **"Not a git repository" error:** github-ship will offer to set up git for you (Step 0).
-- **Push fails with auth error:** Run `gh auth login` or check your SSH keys.
-- **No test runner detected:** This is expected for docs-only or unsupported-language projects. github-ship warns and continues.
+- **Skill doesn't auto-trigger:** Invoke manually with `/save`, `/github-ship`, or `/github-pr`. The auto-trigger hook requires bash. On Windows, install [Git for Windows](https://gitforwindows.org/).
+- **"Not a git repository" error:** `/github-pr` and `/github-ship` offer to set up git for you (Step 0). `/save` requires git to already be set up.
+- **Push fails with auth error:** Run `gh auth login` (GitHub) or `glab auth login` (GitLab), or check your SSH keys.
+- **No test runner detected:** Expected for docs-only or unsupported-language projects. `/github-pr` and `/github-ship` warn and continue. `/save` doesn't run tests.
+- **PR creation fails:** Code is already pushed. Create the PR manually via the web UI.
+- **GitLab not detected:** Ensure `glab` CLI is installed and authenticated (`glab auth status`).
+- **Secret false positive:** `/save` blocks files matching secret patterns (`.env`, `*.pem`, `*.key`, `credential`, `secret`, `token`, `password` in filename). If it's a false positive, rename the file or use `/github-ship` which has a full .gitignore audit instead.
 
 ## Acknowledgments
 
-This project was inspired by the "Full GitHub Flow" prompt in [Agent Flywheel](https://agent-flywheel.com/workflow) by [Jeffrey Emanuel](https://x.com/doodlestein) ([@Dicklesworthstone](https://github.com/Dicklesworthstone)). Check out his work on agentic workflows — it's excellent.
+This project was inspired by the "Full GitHub Flow" prompt in [Agent Flywheel](https://agent-flywheel.com/workflow) by [Jeffrey Emanuel](https://x.com/doodlestein) ([@Dicklesworthstone](https://github.com/Dicklesworthstone)). Check out his work on agentic workflows.
 
 Built by [Anthony Buitran](https://x.com/anthonybuitran) ([@hotsauce9000](https://github.com/hotsauce9000)).
 
