@@ -1,6 +1,6 @@
 {
   "name": "github-ship",
   "description": "Three shipping workflows: /save for quick commits, /github-pr for team pull requests, /github-ship for solo releases. Pre-flight checks, tests, versioning, and GitHub/GitLab support.",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "contextFileName": "GEMINI.md"
 }

@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.1.4] - 2026-03-27
+
+### Fixed
+- Version drift — synced all 5 config files (package.json, plugin.json, cursor plugin, gemini-extension, marketplace) to match VERSION
+- Non-atomic cache writes in `bin/update-check` — replaced `echo >` with `mktemp` + `mv` pattern to prevent corruption from concurrent runs
+- Triple `awk` invocation for snooze file parsing in `bin/update-check` — replaced with single `read -r` for clarity and robustness
+- Silent exit on invalid VERSION file in `bin/update-check` — now emits stderr warning before exiting
+
+### Added
+- `tests/validate-version-sync.sh` — validates all 6 version references match the canonical VERSION file, prevents future drift
+- Tests for stderr warnings when VERSION is empty or malformed (Tests 10-11 in test-update-check.sh)
+
 ## [2.1.3] - 2026-03-27
 
 ### Added

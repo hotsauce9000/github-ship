@@ -1,7 +1,7 @@
 {
   "name": "github-ship",
   "description": "Three commands for shipping code: /save for quick commits, /github-pr for team pull requests, /github-ship for solo releases. All handle pre-flight checks and specific file staging. Supports Python, Node, Rust, Go, Ruby, PHP, Java, GitHub, and GitLab.",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "author": {
     "name": "hotsauce9000",
     "url": "https://github.com/hotsauce9000"
