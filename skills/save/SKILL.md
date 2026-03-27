@@ -149,12 +149,23 @@ Run `git status`. If the working tree is clean (nothing to commit), say "Nothing
 
 ### Step 2: Secret scan
 
-Check filenames of all changed and untracked files:
-- **Exact patterns** (block immediately): `.env`, `.env.*` (e.g., `.env.local`), `*.pem`, `*.key` (file extension)
-- **Substring patterns** (block immediately): `credential`, `secret`, `token`, `password` — but only when they appear in the filename stem, NOT in directory names like `node_modules/`
-- **Exclude:** files inside `.git/`, `node_modules/`, `vendor/`, `__pycache__/`
+Check filenames of all changed and untracked files. **Exclude** files inside `.git/`, `node_modules/`, `vendor/`, `__pycache__/`.
 
-If any match, warn the user: "Potential secret detected: <filename>. Add it to .gitignore before saving." Stop — do not commit secrets.
+- **Exact extension patterns** (block immediately): `.env`, `.env.*` (e.g., `.env.local`), `*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.keystore`
+- **Exact filename patterns** (block immediately): `id_rsa`, `id_ed25519`, `*.secret`, `*.credentials`
+- **Suspicious keyword patterns** (warn and confirm): filenames where `credential`, `secret`, `token`, or `password` appears as a standalone word separated by dots, hyphens, or underscores at BOTH boundaries — e.g., `db-password.txt`, `api-token.json`, `secret.yaml`. Do NOT match when the keyword is embedded inside a compound word — e.g., `token_manager.py`, `credential_validator.go`, `password_hasher.rs` are fine.
+
+**If exact pattern matches:** Block immediately. Warn: "Potential secret detected: <filename>. Add it to .gitignore before saving." Stop.
+
+**If suspicious keyword matches:** Warn: "This filename looks like it might contain secrets: <filename>." Use AskUserQuestion:
+- **Skip this file** — don't stage it
+- **Include it** — I know it's safe, stage it
+
+This is the ONE exception to /save's no-confirmations rule — potential secrets deserve a pause.
+
+**Examples for clarity:**
+- MATCHES (warn): `db-password.txt`, `api-token.json`, `secret.yaml`, `my_secret_config.yaml`
+- DOES NOT MATCH (safe): `token_manager.py`, `credential_validator.go`, `password_hasher.rs`, `secrets_handler.rs`, `tokenize.js`
 
 ### Step 3: Stage files
 
