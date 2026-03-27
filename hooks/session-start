@@ -3,7 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-SKILL_MD="${PLUGIN_ROOT}/skills/github-ship/SKILL.md"
+SHIP_SKILL_MD="${PLUGIN_ROOT}/skills/github-ship/SKILL.md"
+PR_SKILL_MD="${PLUGIN_ROOT}/skills/github-pr/SKILL.md"
+SAVE_SKILL_MD="${PLUGIN_ROOT}/skills/save/SKILL.md"
 
 escape_for_json() {
     local s="$1"
@@ -16,26 +18,40 @@ escape_for_json() {
 }
 
 # Read description from SKILL.md YAML frontmatter
-description=""
-if [ -f "$SKILL_MD" ]; then
-    in_frontmatter=false
-    while IFS= read -r line; do
-        if [[ "$line" == "---" ]]; then
-            if $in_frontmatter; then break; fi
-            in_frontmatter=true
-            continue
-        fi
-        if $in_frontmatter && [[ "$line" == description:* ]]; then
-            description="${line#description: }"
-        fi
-    done < "$SKILL_MD"
+read_description() {
+    local skill_md="$1"
+    local desc=""
+    if [ -f "$skill_md" ]; then
+        local in_frontmatter=false
+        while IFS= read -r line; do
+            if [[ "$line" == "---" ]]; then
+                if $in_frontmatter; then break; fi
+                in_frontmatter=true
+                continue
+            fi
+            if $in_frontmatter && [[ "$line" == description:* ]]; then
+                desc="${line#description: }"
+            fi
+        done < "$skill_md"
+    fi
+    printf '%s' "$desc"
+}
+
+ship_desc=$(read_description "$SHIP_SKILL_MD")
+pr_desc=$(read_description "$PR_SKILL_MD")
+save_desc=$(read_description "$SAVE_SKILL_MD")
+
+if [ -z "$ship_desc" ]; then
+    ship_desc="Invoke /github-ship when the user wants to ship, commit, tag, and release code."
+fi
+if [ -z "$pr_desc" ]; then
+    pr_desc="Invoke /github-pr when the user wants to open a pull request for team review."
+fi
+if [ -z "$save_desc" ]; then
+    save_desc="Invoke /save for a quick commit and push without the full ceremony."
 fi
 
-if [ -z "$description" ]; then
-    description="You have the github-ship skill available. Invoke it when the user wants to ship, commit, or push code."
-fi
-
-session_context="You have the github-ship skill available. ${description}"
+session_context="You have three shipping skills available: /save (quick commit+push), /github-pr (team PRs), and /github-ship (solo releases). ${save_desc} ${pr_desc} ${ship_desc}"
 escaped=$(escape_for_json "$session_context")
 
 if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
