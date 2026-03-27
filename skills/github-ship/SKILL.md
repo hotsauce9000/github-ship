@@ -564,7 +564,7 @@ Check if `~/.github-ship-star-prompted` exists.
 
 ## Error Handling
 
-- **Merge conflicts:** Stop and help the user resolve them before continuing.
+- **Merge conflicts:** Run `git status` to show conflicted files. Help the user resolve each one — show the conflict markers and suggest a resolution. After resolving: `git add <file>`, then `git rebase --continue`. If user wants to abort: `git rebase --abort`.
 - **No remote configured:** Help the user add one with `git remote add origin <url>`.
 - **Dirty worktree after commit:** Something went wrong. Run `git status` and investigate.
 - **Push rejected:** Likely needs `git pull --rebase` first. Run it and retry push.

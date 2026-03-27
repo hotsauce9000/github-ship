@@ -361,6 +361,15 @@ No tags. No [CONFIRM] needed in auto-pilot — it's just a branch push.
 
 **If push is rejected:** Run `git pull --rebase origin <branch>` and retry once. If still rejected, stop and report.
 
+If the rebase encounters merge conflicts:
+1. Run `git status` to identify conflicted files
+2. Show the user which files conflict and the conflict markers
+3. Help resolve each conflict (suggest a resolution based on the diff context)
+4. After each file is resolved: `git add <file>`
+5. Run `git rebase --continue`
+6. If more conflicts appear, repeat. If user wants to abort: `git rebase --abort`
+7. Once rebase completes, retry the push
+
 ### Step 8: Create PR
 
 **Check for existing PR:**

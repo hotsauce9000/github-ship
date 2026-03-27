@@ -193,6 +193,8 @@ git push origin <current branch>
 
 If push is rejected, run `git pull --rebase origin <branch>` and retry once. If still rejected, stop and report.
 
+If the rebase encounters merge conflicts: stop and show conflicted files. Help the user resolve them, then `git add` each resolved file and `git rebase --continue`. If user wants to abort: `git rebase --abort`. Retry push after rebase completes.
+
 ### Step 6: Done
 
 Print:
