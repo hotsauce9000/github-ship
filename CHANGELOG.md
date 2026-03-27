@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.1.2] - 2026-03-27
+
+### Changed
+- `/save` completion banner now shows block-char "SAVE" ASCII art above the summary, matching the style of `/github-ship` and `/github-pr`
+
 ## [2.1.1] - 2026-03-27
 
 ### Fixed
