@@ -213,6 +213,42 @@ rm -rf "$TMP"
 echo ""
 
 # ---------------------------------------------------------------------------
+# Test 10: Empty VERSION → stderr warning
+# ---------------------------------------------------------------------------
+echo "Test 10: Empty VERSION file (stderr warning)"
+TMP="$(mktemp -d)"
+MOCK_ROOT="$(mktemp -d)"
+mkdir -p "$MOCK_ROOT/bin"
+cp "$SCRIPT" "$MOCK_ROOT/bin/update-check"
+echo "" > "$MOCK_ROOT/VERSION"
+ERR="$(GITHUB_SHIP_STATE_DIR="$TMP" bash "$MOCK_ROOT/bin/update-check" 2>&1 1>/dev/null || true)"
+if echo "$ERR" | grep -q "WARNING"; then
+  pass "stderr warning for empty VERSION"
+else
+  fail "expected stderr warning, got: $ERR"
+fi
+rm -rf "$TMP" "$MOCK_ROOT"
+echo ""
+
+# ---------------------------------------------------------------------------
+# Test 11: Invalid VERSION → stderr warning
+# ---------------------------------------------------------------------------
+echo "Test 11: Invalid VERSION format (stderr warning)"
+TMP="$(mktemp -d)"
+MOCK_ROOT="$(mktemp -d)"
+mkdir -p "$MOCK_ROOT/bin"
+cp "$SCRIPT" "$MOCK_ROOT/bin/update-check"
+echo "2.1.0-beta" > "$MOCK_ROOT/VERSION"
+ERR="$(GITHUB_SHIP_STATE_DIR="$TMP" bash "$MOCK_ROOT/bin/update-check" 2>&1 1>/dev/null || true)"
+if echo "$ERR" | grep -q "WARNING"; then
+  pass "stderr warning for invalid VERSION"
+else
+  fail "expected stderr warning, got: $ERR"
+fi
+rm -rf "$TMP" "$MOCK_ROOT"
+echo ""
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo "==================================="

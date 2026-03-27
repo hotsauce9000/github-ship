@@ -20,6 +20,13 @@ SNOOZE_FILE="$STATE_DIR/update-snoozed"
 VERSION_FILE="$REPO_ROOT/VERSION"
 REMOTE_URL="${GITHUB_SHIP_REMOTE_URL:-https://raw.githubusercontent.com/hotsauce9000/github-ship/main/VERSION}"
 
+# Atomic cache write: temp file + mv prevents partial reads from concurrent runs
+# Note: mv atomicity is POSIX rename(2) guarantee; best-effort on Windows/NTFS
+_cache_write() {
+  local tmp
+  tmp=$(mktemp "${CACHE_FILE}.XXXXXX") && echo "$1" > "$tmp" && mv "$tmp" "$CACHE_FILE" || { rm -f "$tmp" 2>/dev/null; return 1; }
+}
+
 # --- Force flag (busts cache + snooze for manual invocation) ---
 if [ "${1:-}" = "--force" ]; then
   rm -f "$CACHE_FILE"
@@ -37,10 +44,12 @@ if [ -f "$VERSION_FILE" ]; then
   LOCAL="$(cat "$VERSION_FILE" 2>/dev/null | tr -d '[:space:]')"
 fi
 if [ -z "$LOCAL" ]; then
+  echo "github-ship: WARNING — VERSION file is empty or missing" >&2
   exit 0
 fi
 # Validate LOCAL is clean semver (reject pre-release like 2.1.0-beta)
 if ! echo "$LOCAL" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+  echo "github-ship: WARNING — VERSION format invalid: $LOCAL" >&2
   exit 0
 fi
 
@@ -50,7 +59,7 @@ if [ -f "$MARKER_FILE" ]; then
   rm -f "$MARKER_FILE"
   rm -f "$SNOOZE_FILE"
   mkdir -p "$STATE_DIR"
-  echo "UP_TO_DATE $LOCAL" > "$CACHE_FILE"
+  _cache_write "UP_TO_DATE $LOCAL"
   if [ -n "$OLD" ]; then
     echo "JUST_UPGRADED $OLD $LOCAL"
   fi
@@ -66,9 +75,8 @@ check_snooze() {
   local remote_ver="$1"
   [ ! -f "$SNOOZE_FILE" ] && return 1
   local snoozed_ver snoozed_level snoozed_epoch
-  snoozed_ver="$(awk '{print $1}' "$SNOOZE_FILE" 2>/dev/null || true)"
-  snoozed_level="$(awk '{print $2}' "$SNOOZE_FILE" 2>/dev/null || true)"
-  snoozed_epoch="$(awk '{print $3}' "$SNOOZE_FILE" 2>/dev/null || true)"
+  # read puts trailing fields into last var; integer validation below catches this
+  read -r snoozed_ver snoozed_level snoozed_epoch < "$SNOOZE_FILE" 2>/dev/null || return 1
   # Validate: all three fields must be non-empty
   [ -z "$snoozed_ver" ] || [ -z "$snoozed_level" ] || [ -z "$snoozed_epoch" ] && return 1
   # Validate: level and epoch must be integers
@@ -128,12 +136,12 @@ REMOTE="$(echo "$REMOTE" | tr -d '[:space:]')"
 
 # Validate: must look like a semver version (rejects HTML, prompt injection, etc.)
 if ! echo "$REMOTE" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-  echo "UP_TO_DATE $LOCAL" > "$CACHE_FILE"
+  _cache_write "UP_TO_DATE $LOCAL"
   exit 0
 fi
 
 if [ "$LOCAL" = "$REMOTE" ]; then
-  echo "UP_TO_DATE $LOCAL" > "$CACHE_FILE"
+  _cache_write "UP_TO_DATE $LOCAL"
   exit 0
 fi
 
@@ -149,11 +157,11 @@ _ver_gte() {
   return 0  # equal
 }
 if _ver_gte "$LOCAL" "$REMOTE"; then
-  echo "UP_TO_DATE $LOCAL" > "$CACHE_FILE"
+  _cache_write "UP_TO_DATE $LOCAL"
   exit 0
 fi
 
 # Upgrade available (REMOTE is strictly newer)
-echo "UPGRADE_AVAILABLE $LOCAL $REMOTE" > "$CACHE_FILE"
+_cache_write "UPGRADE_AVAILABLE $LOCAL $REMOTE"
 check_snooze "$REMOTE" && exit 0
 echo "UPGRADE_AVAILABLE $LOCAL $REMOTE"
