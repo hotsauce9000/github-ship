@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [2.2.0] - 2026-03-28
+
+### Added
+- Auto-release GitHub Action — creates GitHub Releases when PRs merge to `main`, with dual-flow detection (auto-bump for `/github-pr` PRs, use existing version for `/github-ship` PRs)
+- `[no-release]` escape hatch in PR title to skip release creation
+- Concurrency group prevents race conditions from simultaneous PR merges
+- Idempotent tag check — skips release if tag already exists
+
 ## [2.1.4] - 2026-03-27
 
 ### Fixed
