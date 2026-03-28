@@ -1,0 +1,152 @@
+name: Auto Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+# NOTE: If branch protection is enabled on main, the github-actions[bot]
+# must be allowed to bypass, or use a PAT with bypass permissions instead
+# of GITHUB_TOKEN for the checkout + push steps.
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: >-
+      github.event.pull_request.merged == true &&
+      !contains(github.event.pull_request.title, '[no-release]')
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: auto-release
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Detect flow
+        id: detect
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          # Compare against the PR's base commit (works for squash, merge, and rebase)
+          if git diff "$BASE_SHA" HEAD -- VERSION | grep -q '^[+-][0-9]'; then
+            echo "flow=manual" >> "$GITHUB_OUTPUT"
+            echo "::notice::Flow B — VERSION already bumped in PR"
+          else
+            echo "flow=auto" >> "$GITHUB_OUTPUT"
+            echo "::notice::Flow A — auto-bumping VERSION"
+          fi
+
+      - name: Auto-bump version
+        if: steps.detect.outputs.flow == 'auto'
+        id: bump
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          CURRENT=$(cat VERSION | tr -d '[:space:]')
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+          if echo "$PR_TITLE" | grep -qi 'BREAKING'; then
+            MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
+          elif echo "$PR_TITLE" | grep -qE '^feat(\(|:)'; then
+            MINOR=$((MINOR + 1)); PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+
+          NEW="${MAJOR}.${MINOR}.${PATCH}"
+          echo "$NEW" > VERSION
+
+          for f in package.json \
+                   .claude-plugin/plugin.json \
+                   .cursor-plugin/plugin.json \
+                   gemini-extension.json \
+                   .claude-plugin/marketplace.json; do
+            sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW\"/" "$f"
+          done
+
+          echo "new=$NEW" >> "$GITHUB_OUTPUT"
+          echo "::notice::Bumped $CURRENT → $NEW"
+
+      - name: Generate CHANGELOG entry
+        if: steps.detect.outputs.flow == 'auto'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          NEW=$(cat VERSION | tr -d '[:space:]')
+          DATE=$(date +%Y-%m-%d)
+
+          if echo "$PR_TITLE" | grep -qE '^feat(\(|:)'; then
+            SECTION="Added"
+          elif echo "$PR_TITLE" | grep -qE '^fix(\(|:)'; then
+            SECTION="Fixed"
+          else
+            SECTION="Changed"
+          fi
+
+          CLEAN_TITLE=$(echo "$PR_TITLE" | sed -E 's/^[a-z]+(\([^)]*\))?!?: *//')
+
+          ENTRY="## [$NEW] - $DATE
+
+          ### $SECTION
+          - $CLEAN_TITLE (#$PR_NUMBER)"
+
+          awk -v entry="$ENTRY" '
+            /^## \[/ && !inserted {
+              print entry
+              print ""
+              inserted=1
+            }
+            { print }
+          ' CHANGELOG.md > /tmp/changelog_new.md
+          mv /tmp/changelog_new.md CHANGELOG.md
+
+          echo "$ENTRY" > /tmp/release_body.md
+
+      - name: Extract CHANGELOG for release (manual flow)
+        if: steps.detect.outputs.flow == 'manual'
+        run: |
+          awk '/^## \[/{if(count++) exit} count' CHANGELOG.md > /tmp/release_body.md
+
+      - name: Commit and push version bump
+        if: steps.detect.outputs.flow == 'auto'
+        run: |
+          NEW=$(cat VERSION | tr -d '[:space:]')
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add VERSION CHANGELOG.md \
+                 package.json \
+                 .claude-plugin/plugin.json \
+                 .cursor-plugin/plugin.json \
+                 gemini-extension.json \
+                 .claude-plugin/marketplace.json
+          git commit -m "chore: release v${NEW} [skip ci]"
+          git pull --rebase
+          git push
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          TAG="v${VERSION}"
+
+          if git tag -l "$TAG" | grep -q "$TAG"; then
+            echo "::warning::Tag $TAG already exists — skipping release"
+            exit 0
+          fi
+
+          CLEAN_TITLE=$(echo "$PR_TITLE" | sed -E 's/^[a-z]+(\([^)]*\))?!?: *//')
+
+          gh release create "$TAG" \
+            --title "${TAG} — ${CLEAN_TITLE}" \
+            --notes-file /tmp/release_body.md \
+            --target main
